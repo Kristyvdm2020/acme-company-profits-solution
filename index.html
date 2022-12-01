@@ -6,6 +6,9 @@
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
     <style>
+      main {
+        display: flex;
+      }
     </style>
   </head>
   <body>
@@ -13,9 +16,82 @@
     <script type='text/babel'>
       //https://www.acme-api.com/api/companies
       //https://www.acme-api.com/api/companies/:id/companyProfits
-      const App = () => {
+      const BASE_URL = 'https://www.acme-api.com/api';
+      const COMPANIES_URL = `${BASE_URL}/companies`;
+      //console.log(COMPANIES_URL);
+
+      const Companies = ({companies}) => {
         return (
-          <h1>Start Building</h1>
+          <ul>
+              {
+                companies.map(company => {
+                  return (
+                    <li>
+                      <a href={`#${company.id}`}>
+                        {company.name}
+                      </a>
+                    </li>
+                  );
+                })
+              }
+            </ul>
+        )
+      }
+
+
+      const Profits = ({profits}) => {
+        return (
+          <ul>
+                {
+                  profits.map(profit => {
+                    return (
+                      <li>
+                        {profit.amount}
+                      </li>
+                    )
+                  })
+                }
+              </ul>
+        )
+      }
+
+      const App = () => {
+        const {useState, useEffect} = React;
+        const [companies, setCompanies] = useState([]);
+        const [profits, setProfits] = useState([]);
+        
+        const loadCompanies = async() => {
+          const response = await fetch(COMPANIES_URL);
+          const json = await response.json();
+          setCompanies(json);
+        }
+
+        const loadProfits = async() => {
+          const id = window.location.hash.slice(1);
+          if(!id) {
+            setProfits([]);
+          } else {
+            const response = await fetch(`${COMPANIES_URL}/${id}/companyProfits`);
+            const json = await response.json();
+            setProfits(json);
+          }
+        }
+
+        useEffect(()=>{
+          loadCompanies();
+          window.addEventListener("hashchange", loadProfits)
+          loadProfits();
+        }, []);
+
+        return (
+          <div>
+            <h1><a href='#'>Acme Companies ({companies.length})</a></h1>
+            <main>
+              <Companies companies={companies}/>
+              <Profits profits={profits}/>
+            </main>
+          </div>
+
         );
       }
 
